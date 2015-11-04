@@ -1,3 +1,11 @@
+/*
+ *  surveyjoy - v0.1.0
+ *  Product management survey tool
+ *  http://github.com/cratejoy/surveyjoy#readme
+ *
+ *  Made by Amir Elaguizy
+ *  Under MIT License
+ */
 // the semi-colon before function invocation is a safety net against concatenated
 // scripts and/or other plugins which may not be closed properly.
 ;(function ( $, window, document, undefined ) {

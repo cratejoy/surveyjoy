@@ -3,15 +3,39 @@
 	<head>
 		<title>jQuery Boilerplate</title>
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-		<script src="../src/jquery.boilerplate.js"></script>
+		<script src="../src/jquery.surveyjoy.js"></script>
+		<link href="../src/styles/base.css" rel="stylesheet" type="text/css" />
 	</head>
 	<body>
-		<div id="element"></div>
 		<script>
 			$(function() {
-				$("#element").defaultPluginName({
-					propertyName: "a custom value"
+				res = $("body").Surveyjoy({
+					surveyData: {
+						options: {
+						},
+
+						surveys: {
+							test1: {
+								name: 'Test Survey 1',
+								titlePage: {
+									title: "Welcome to my test survey",
+									body: "It is a survey, but it is also a test of surveyjoy. You'll like it. Probably."
+								},
+								thanksPage: {
+									title: "Thanks for taking this survey",
+									body: "The survey has completed.",
+									nextTimer: 5000
+								},
+								questions: [
+								]
+							}
+						}
+					}
 				});
+
+				setTimeout(function() {
+					$("body").Surveyjoy('trigger', 'test1');
+				}, 500);
 			});
 		</script>
 	</body>
