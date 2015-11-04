@@ -19,14 +19,22 @@
 								name: 'Test Survey 1',
 								titlePage: {
 									title: "Welcome to my test survey",
-									body: "It is a survey, but it is also a test of surveyjoy. You'll like it. Probably."
+									body: "It is a survey, but it is also a test of surveyjoy. You'll like it. Probably.",
+									nextTimer: 5000
 								},
 								thanksPage: {
 									title: "Thanks for taking this survey",
-									body: "The survey has completed.",
-									nextTimer: 5000
+									body: "The survey has completed."
 								},
 								questions: [
+									{
+										id: 'freeresponse1',
+										type: 'freeresponse',
+										title: 'What is your free response?',
+										subtitle: 'You should type in a free response.',
+										placeholder: 'Free response goes here.',
+										required: true
+									}
 								]
 							}
 						}

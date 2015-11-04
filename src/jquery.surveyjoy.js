@@ -20,8 +20,19 @@
 				surveyContainerTpl: "<div class='sj-container'><div class='sj-content'></div><div class='sj-actionbar'></div></div>",
 				titlePageTpl: "<div class='sj-titlepage'><h2 class='sj-title'>{{ title }}</h2><p class='sj-body'>{{ body }}</p></div>",
 				thanksPageTpl: "<div class='sj-titlepage'><h2 class='sj-title'>{{ title }}</h2><p class='sj-body'>{{ body }}</p></div>",
+				freeResponseTpl: "<div class='sj-question freeresponse'><h2 class='sj-title'>{{ title }}</h2><p class='sj-subtitle'>{{ subtitle }}</p><textarea name='{{ id }}' placeholder='{{ placeholder }}' /></div>",
 				startButtonTpl: "<button class='sj-btn start' href='javascript:void(0)'>Start</button>",
-				thanksButtonTpl: "<button class='sj-btn thanks' href='javascript:void(0)'>Thanks</button>"
+				thanksButtonTpl: "<button class='sj-btn thanks' href='javascript:void(0)'>Thanks</button>",
+				nextButtonTpl: "<button class='sj-btn next' href='javascript:void(0)'>Next</button>",
+				skipButtonTpl: "<button class='sj-btn skip' href='javascript:void(0)'>Skip</button>",
+				defaultSurvey: {
+					titlePage: {},
+					thanksPage: {},
+					questions: []
+				},
+				defaultQuestion: {
+					required: false
+				}
 			};
 
 		// The actual plugin constructor
@@ -37,6 +48,7 @@
 				// is generally empty as we don't want to alter the default options for
 				// future instances of the plugin
 				this.settings = $.extend( {}, defaults, options );
+
 				this._defaults = defaults;
 				this._name = pluginName;
 
@@ -69,6 +81,25 @@
 
 					console.log("Loaded survey data");
 					console.dir(this.settings.surveyData);
+
+					// Set defaults for questions & surveys
+					var newSurveys = {};
+					$.each(this.settings.surveyData.surveys, $.proxy(function(surveyId, survey) {
+						var newSurvey = $.extend({}, this.settings.defaultSurvey, survey);
+
+						var questions = newSurvey.questions;
+						newSurvey.questions = [];
+
+						$.each(questions, $.proxy(function(pageId, page) {
+							var newPage = $.extend({}, this.settings.defaultQuestion, page);
+
+							newSurvey.questions.push(newPage);
+						}, this));
+
+						newSurveys[surveyId] = newSurvey;
+					}, this));
+
+					this.settings.surveyData.surveys = newSurveys;
 				},
 
 				trigger: function(surveyId) {
@@ -94,7 +125,7 @@
 				_advancePage: function() {
 					var nextPage = null;
 
-					if(!this.currentSurveyPage) {
+					if(this.currentSurveyPage === null) {
 						nextPage = 'titlePage';
 					}
 					else if(this.currentSurveyPage === 'thanksPage') {
@@ -118,7 +149,7 @@
 				_showPage: function() {
 					this._advancePage();
 
-					if(!this.currentSurveyPage) {
+					if(this.currentSurveyPage === null) {
 						return this._endSurvey();
 					}
 
@@ -168,6 +199,16 @@
 
 						$btn.on('click', $.proxy(this._endSurvey, this));
 					}
+					else if(buttonId === 'skip') {
+						$btn = $(this.settings.skipButtonTpl);
+
+						$btn.on('click', $.proxy(this._showPage, this));
+					}
+					else if(buttonId === 'next') {
+						$btn = $(this.settings.nextButtonTpl);
+
+						$btn.on('click', $.proxy(this._showPage, this));
+					}
 
 					return $btn;
 				},
@@ -179,6 +220,16 @@
 					else if(pageId === 'thanksPage') {
 						return ['thanks'];
 					}
+					else {
+						var page = this._getPage(pageId);
+
+						if(!page.required) {
+							return ['skip', 'next'];
+						}
+						else {
+							return ['next'];
+						}
+					}
 			    },
 
 				_renderPage: function(pageId) {
@@ -188,12 +239,15 @@
 					else if(pageId === 'thanksPage') {
 						return this._renderThanksPage();
 					}
+					else {
+						return this._renderQuestion(pageId);
+					}
 				},
 
 				_renderTitlePage: function() {
 					var page = this.currentSurvey.titlePage;
 
-					var html = this.settings.titlePageTpl.replace("{{ title }}", page.title).replace("{{ body }}", page.body);
+					var html = this._renderTpl(this.settings.titlePageTpl, page);
 
 					return $(html);
 				},
@@ -201,9 +255,28 @@
 				_renderThanksPage: function() {
 					var page = this.currentSurvey.thanksPage;
 
-					var html = this.settings.thanksPageTpl.replace("{{ title }}", page.title).replace("{{ body }}", page.body);
+					var html = this._renderTpl(this.settings.thanksPageTpl, page);
 
 					return $(html);
+				},
+
+				_renderQuestion: function(pageId) {
+					var page = this._getPage(pageId);
+					var html;
+
+					if(page.type === 'freeresponse') {
+						html = this._renderTpl(this.settings.freeResponseTpl, page);
+					}
+
+					return $(html);
+				},
+
+				_renderTpl: function(tpl, obj) {
+					$.each(obj, function(key, val) {
+						tpl = tpl.replace("{{ " + key + " }}", val);
+					});
+
+					return tpl;
 				},
 
 				_getPage: function(pageId) {
